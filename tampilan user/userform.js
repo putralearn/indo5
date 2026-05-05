@@ -34,14 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // ============================================================
     // MAPS — OpenStreetMap + Geolocation API
     // ============================================================
-    const addressFields = document.querySelectorAll("textarea[required]");
-    addressFields.forEach(field => {
-        // Cek apakah ini field alamat
-        const label = field.closest(".field")?.querySelector("label");
-        if (label && label.textContent.toLowerCase().includes("alamat")) {
-            addMapsButton(field);
-        }
-    });
+
 
     // File upload preview
     document.querySelectorAll(".file-upload input[type='file']").forEach(inp => {
@@ -73,17 +66,17 @@ function removeNikHint(input) {
 }
 
 // ===== MAPS BUTTON =====
-function addMapsButton(textarea) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.innerHTML = `
+
+const btn = document.createElement("button");
+btn.type = "button";
+btn.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
             <circle cx="12" cy="10" r="3"/>
         </svg>
         Deteksi Lokasi Otomatis
     `;
-    btn.style.cssText = `
+btn.style.cssText = `
         margin-top: 8px;
         padding: 8px 14px;
         background: #1e3a5f;
@@ -98,61 +91,61 @@ function addMapsButton(textarea) {
         transition: 0.3s;
     `;
 
-    btn.addEventListener("mouseenter", () => btn.style.background = "#2a5298");
-    btn.addEventListener("mouseleave", () => btn.style.background = "#1e3a5f");
+btn.addEventListener("mouseenter", () => btn.style.background = "#2a5298");
+btn.addEventListener("mouseleave", () => btn.style.background = "#1e3a5f");
 
-    btn.addEventListener("click", () => detectLocation(textarea, btn));
-    textarea.parentElement.insertBefore(btn, textarea.nextSibling);
+btn.addEventListener("click", () => detectLocation(textarea, btn));
+textarea.parentElement.insertBefore(btn, textarea.nextSibling);
 }
 
 // ===== DETEKSI LOKASI =====
-function detectLocation(textarea, btn) {
-    if (!navigator.geolocation) {
-        showToast("⚠️ Browser tidak support geolocation");
-        return;
-    }
 
-    const originalText = btn.innerHTML;
-    btn.innerHTML = "⏳ Mendeteksi lokasi...";
-    btn.disabled = true;
+if (!navigator.geolocation) {
+    showToast("⚠️ Browser tidak support geolocation");
+    return;
+}
 
-    navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-            const { latitude, longitude } = pos.coords;
-            try {
-                const res = await fetch(
-                    `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=id`,
-                    { headers: { "Accept-Language": "id" } }
-                );
-                const data = await res.json();
+const originalText = btn.innerHTML;
+btn.innerHTML = "⏳ Mendeteksi lokasi...";
+btn.disabled = true;
 
-                const addr = data.address;
-                const parts = [
-                    addr.road || addr.pedestrian || "",
-                    addr.village || addr.suburb || "",
-                    addr.city_district || addr.county || "",
-                    addr.city || addr.town || addr.state_district || "",
-                    addr.state || "",
-                    addr.postcode || ""
-                ].filter(Boolean);
+navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        try {
+            const res = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=id`,
+                { headers: { "Accept-Language": "id" } }
+            );
+            const data = await res.json();
 
-                textarea.value = parts.join(", ");
-                textarea.style.boxShadow = "0 0 8px lime";
-                showToast("✅ Lokasi berhasil dideteksi!");
-            } catch {
-                showToast("⚠️ Gagal mengambil data alamat");
-            }
+            const addr = data.address;
+            const parts = [
+                addr.road || addr.pedestrian || "",
+                addr.village || addr.suburb || "",
+                addr.city_district || addr.county || "",
+                addr.city || addr.town || addr.state_district || "",
+                addr.state || "",
+                addr.postcode || ""
+            ].filter(Boolean);
 
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        },
-        (err) => {
-            showToast("❌ Izin lokasi ditolak atau error");
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        },
-        { timeout: 10000 }
-    );
+            textarea.value = parts.join(", ");
+            textarea.style.boxShadow = "0 0 8px lime";
+            showToast("✅ Lokasi berhasil dideteksi!");
+        } catch {
+            showToast("⚠️ Gagal mengambil data alamat");
+        }
+
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    },
+    (err) => {
+        showToast("❌ Izin lokasi ditolak atau error");
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    },
+    { timeout: 10000 }
+);
 }
 
 // ============================================================
