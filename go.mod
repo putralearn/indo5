@@ -1,5 +1,5 @@
 module indo5
 
-go 1.25.4
+go 1.22
 
 require github.com/lib/pq v1.12.3 // indirect
